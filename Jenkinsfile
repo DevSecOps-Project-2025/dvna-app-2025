@@ -1,31 +1,32 @@
 // Jenkinsfile (الـ Groovy Script المُعدّل للعمل على جهاز افتراضي واحد)
 
 pipeline {
-    // جميع المراحل ستعمل على العامل الرئيسي (master/built-in)
+    // استخدم أي عامل متاح، وهو في حالتنا هو العقدة الرئيسية (Built-in Node)
     agent any 
     
     stages {
         stage('Checkout Code') {
             steps {
                 echo 'Pulling the latest code from GitHub...'
-                // خطوة أساسية لضمان سحب الكود في بداية كل تشغيل
+                // سحب الكود من المستودع
                 checkout scm
             }
         }
         
         stage('Build - Docker Image') {
-            // يتم البناء على العامل الرئيسي
+            // تنفيذ البناء على العقدة الرئيسية التي تم إعداد صلاحيات Docker عليها
             agent { label 'master' } 
             steps {
                 echo 'Starting Docker Image Build...'
-                // بناء الصورة مع وسم فريد باستخدام رقم البناء
+                // بناء الصورة مع وسم فريد باستخدام رقم البناء (مثلاً dvna-image:6)
+                // يجب أن يتوفر ملف Dockerfile صحيح في جذر المستودع
                 sh 'docker build -t dvna-image:${env.BUILD_NUMBER} .'
-                echo 'Docker Image Built Successfully: dvna-image:${env.BUILD_NUMBER}'
+                echo "Docker Image Built Successfully: dvna-image:${env.BUILD_NUMBER}"
             }
         }
 
         stage('Deploy To Test Environment') {
-            // يتم النشر على نفس الجهاز، باستخدام منفذ مختلف لحاوية الاختبار
+            // النشر على نفس الجهاز، باستخدام منفذ مختلف للاختبار
             agent { label 'master' } 
             steps {
                 echo 'Deploying application to Test Environment (Port 8081)...'
@@ -33,16 +34,14 @@ pipeline {
                 sh 'docker stop dvna_test || true'
                 sh 'docker rm dvna_test || true'
                 
-                // 2. تشغيل حاوية التطبيق على منفذ مختلف (8081)
-                // المنفذ الخارجي 8081 يشير إلى المنفذ الداخلي 3000 للتطبيق
+                // 2. تشغيل حاوية التطبيق على منفذ 8081 الخارجي
                 sh 'docker run -d --name dvna_test -p 8081:3000 dvna-image:${env.BUILD_NUMBER}'
                 echo 'Test Deployment Completed. Access via http://<VM-IP>:8081'
             }
         }
 
-        // هذا القسم سيتم تعديله لاحقاً عند إضافة WAF و Nginx (DevSecOps stages)
         stage('Deploy To Production') {
-            // يتم النشر على نفس الجهاز، باستخدام منفذ الإنتاج الافتراضي (80)
+            // النشر على نفس الجهاز، باستخدام منفذ الإنتاج الافتراضي
             agent { label 'master' } 
             steps {
                 echo 'Deploying application to Production Environment (Port 80)...'
@@ -50,7 +49,7 @@ pipeline {
                 sh 'docker stop dvna_prod || true'
                 sh 'docker rm dvna_prod || true'
                 
-                // 2. تشغيل حاوية التطبيق على منفذ 80
+                // 2. تشغيل حاوية التطبيق على منفذ 80 الخارجي
                 sh 'docker run -d --name dvna_prod -p 80:3000 dvna-image:${env.BUILD_NUMBER}'
                 echo 'Production Deployment Completed. Access via http://<VM-IP>'
             }
