@@ -21,6 +21,16 @@ pipeline {
                 echo "Docker Image Built Successfully: dvna-image:${env.BUILD_NUMBER}"
             }
         }
+        stage('Security Scan') {
+            steps {
+                script {
+                    echo "Scanning Docker image for vulnerabilities using Trivy..."
+                    sh "docker pull aquasec/trivy:latest"
+                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --exit-code 1 --severity CRITICAL,HIGH dvna-image:${BUILD_NUMBER}"
+                    echo "Security Scan Completed Successfully (No Critical/High issues found)."
+                }
+            }
+        }
 
         stage('Deploy To Test Environment') {
             // النشر على نفس الجهاز، باستخدام منفذ 8081 للاختبار
