@@ -47,7 +47,7 @@ pipeline {
                 sh 'docker rm dvna_prod || true'
                 
                 // تشغيل الحاوية الجديدة
-                sh "docker run -d --name dvna_prod -p 80:3000 dvna-image:${env.BUILD_NUMBER}"
+                sh "docker run -d --name dvna_prod -p 8000:3000 dvna-image:${env.BUILD_NUMBER}"
                 echo 'Production Deployment Completed. Access via http://<VM-IP>'
             }
         }
