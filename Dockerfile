@@ -1,5 +1,5 @@
 # Damn Vulnerable NodeJS Application
-ROM node:20-alpine
+FROM node:20-alpine
 LABEL MAINTAINER "Subash SN"
 
 WORKDIR /app
