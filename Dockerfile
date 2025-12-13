@@ -5,7 +5,7 @@ LABEL MAINTAINER "Subash SN"
 WORKDIR /app
 
 COPY . .
-RUN apk add --no-cache python3 make gcc g++
+RUN apk add --no-cache build-base python3
 RUN chmod +x /app/entrypoint.sh \
 	&& npm install
 
